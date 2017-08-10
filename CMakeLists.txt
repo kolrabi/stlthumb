@@ -1,7 +1,7 @@
 ##
 # Library dependencies:
 #
-#   - SDL2
+#   - SDL2, EGL or OSMESA
 #   - png / zlib
 #   - OpenGL
 
@@ -19,11 +19,17 @@ INCLUDE (CompilerSettings)
 INCLUDE (Libraries)
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src)
+INCLUDE_DIRECTORIES(${API_INCLUDES})
+
+ADD_DEFINITIONS(-DUSE_API_${USE_API})
 
 # engine
 ADD_EXECUTABLE( 
   stlthumb
   src/glew.c
+  src/context_sdl2.cc
+  src/context_osmesa.cc
+  src/context_egl.cc
   src/image.cc
   src/main.cc
   src/render.cc

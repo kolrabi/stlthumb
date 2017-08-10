@@ -1,19 +1,12 @@
 #include "render.h"
 #include "stl.h"
 #include "image.h"
+#include "context.h"
 
-#include <cstdlib>
-#include <iostream>
-
-#define GLEW_STATIC
 #include <GL/glew.h>
 
-#include <SDL2/SDL_video.h>
-
 #include <unistd.h>
-
-static SDL_Window *   sdlWindow = nullptr;
-static SDL_GLContext  glContext = nullptr;
+#include <iostream>
 
 static GLuint         shaderProgram = 0;
 static GLuint         vertexBuffer = 0;
@@ -25,46 +18,16 @@ static size_t         pixelDataSize;
 
 static void createWindow(int width, int height)
 {
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,          1);
-
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-
-  SDL_GL_SetAttribute(SDL_GL_RED_SIZE,              8);
-  SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,            8);
-  SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,             8);
-
-  sdlWindow = SDL_CreateWindow(
-    "stlthumb",
-    SDL_WINDOWPOS_UNDEFINED,
-    SDL_WINDOWPOS_UNDEFINED,
-    width, height,
-    SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN
-  );
-
-  if (sdlWindow == nullptr) {
-    std::cerr << "Could not create window" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  glContext = SDL_GL_CreateContext(sdlWindow);
-  
-  if (glContext == nullptr) {
-    SDL_DestroyWindow(sdlWindow);
-    std::cerr << "Could not create context" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  SDL_GL_MakeCurrent(sdlWindow, glContext);
+  setupContext(width, height);
 
   glewInit();
 
   glEnable(GL_DEPTH_TEST);
+  glEnable(GL_MULTISAMPLE);
   glDisable(GL_CULL_FACE);
   glPixelStorei(GL_PACK_ALIGNMENT, 1);
-  glReadBuffer(GL_BACK);
   glClearColor(0.25,0.25,0.75,0);
-  
+
   glViewport(0, 0, width, height);
 }
 
@@ -79,12 +42,7 @@ static void shutdown()
   shaderProgram = 0;
   vertexBuffer = 0;
 
-  if (sdlWindow) SDL_GL_MakeCurrent(sdlWindow, nullptr);
-  if (glContext) SDL_GL_DeleteContext(glContext);
-  if (sdlWindow) SDL_DestroyWindow(sdlWindow);
-
-  glContext = nullptr;
-  sdlWindow = nullptr;
+  teardownContext();
 }
 
 static void checkShader(GLuint shader)
@@ -126,8 +84,7 @@ void buildShaders()
 {
 
   const char *vertexShader = 
-    "#version 130\n"
-    "precision highp float;"
+    "#version 120\n"
     "uniform mat4 uMatMVP;"
     "varying vec3 vNormal;"
     "void main() {"
@@ -136,8 +93,7 @@ void buildShaders()
     "}";
 
   const char *fragmentShader = 
-    "#version 130\n"
-    "precision highp float;"
+    "#version 120\n"
     "varying vec3 vNormal;"
     "const vec3 lightDir = vec3(0, 3, 1);"
     "void main() {"

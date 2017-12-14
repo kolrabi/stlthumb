@@ -1,4 +1,4 @@
-#include "stl.h"
+﻿#include "stl.h"
 
 #include <iostream>
 #include <fstream>
@@ -21,6 +21,14 @@ static std::string readString(std::ifstream &file)
   return token;
 }
 
+static std::string readLine(std::ifstream &file)
+{
+  std::string line;
+  std::getline(file,line);
+
+  return line;
+}
+
 static Vec3 readVec3(std::ifstream &file)
 {
   Vec3 v;
@@ -33,7 +41,7 @@ STLModel *readSTLText(std::ifstream &file)
   STLModel *model = new STLModel;
 
   eatToken(file, "solid");
-  model->name = readString(file);
+  model->name = readLine(file);
 
   while(readString(file) != "endsolid") {
     //eatToken(file, "facet");
